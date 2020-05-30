@@ -75,7 +75,7 @@ bot.on('message', async message => {
         let url = JSON.stringify(server.queue[0])
 
         if (url !== undefined) {
-            server.dispatcher = connection.playOpusStream(await ytdl(url, { filter: "audioonly", highWaterMark: 1024 * 1024 * 32 }))
+            server.dispatcher = connection.playStream(await ytdl(url, { filter: "audioonly", highWaterMark: 1024 * 1024 * 32 }))
 
             server.queue.shift()
 
