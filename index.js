@@ -57,6 +57,7 @@ bot.on('message', async message => {
             .addField(`${prefix}playing`, 'Muestra información sobre la canción que se está reproduciendo en el momento')
             .addField(`${prefix}queue`, 'Muestra la cola de reproducción de audio')
             .addField(`${prefix}skip`, 'Pasa a la próxima canción de la cola de reproducción')
+            .addField(`${prefix}jump`, 'Elimina el número de track que se indique')
             .addField(`${prefix}stop`, 'Detiene la reproducción y vacía la cola de reproducción')
             .addField(`${prefix}join`, 'Agrega al bot al canal de audio(Tenés que estar en un canal de audio)')
             .addField(`${prefix}leave`, 'Expulsa al bot del canal de audio(Tenés que estar en un canal de audio)')
