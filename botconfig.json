@@ -1,6 +1,7 @@
 {
     "token": "",
     "prefix": "!",
-    "version": "1.0",
-    "authURL": ""
+    "version": "2.0.0",
+    "authURL": "",
+    "owner": ""
 }
