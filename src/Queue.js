@@ -7,6 +7,7 @@ class Queue {
     }
     addSong(song) {
        this.queue.push(song)
+       return song
     }
 
     empty() {
@@ -24,7 +25,6 @@ class Queue {
     getFirstSong() {
         return this.queue[0]
     }
-
 }
 
 module.exports = Queue

@@ -8,6 +8,8 @@ const Search = require('./src/Search');
 
 const Play = require('./src/Play');
 
+const spdl = require('spdl-core')
+
 const Queue = require('./src/Queue');
 
 const Song = require('./src/Song')
@@ -17,6 +19,11 @@ const RichEmbed = require('./src/RichEmbed')
 const version = botconfig.version
 
 let servers = {}
+
+function formatDuration(duration) {
+    let seconds = duration / 1000;
+    return `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60)}`;
+}
 
 //Loguear Bot
 
@@ -66,6 +73,7 @@ bot.on('message', async message => {
             .addField(`${prefix}resume`, 'Reanuda la reproducción')
             .addField(`${prefix}skip`, 'Pasa a la próxima canción de la cola de reproducción')
             .addField(`${prefix}stop`, 'Detiene la reproducción y vacía la cola de reproducción')
+            .addField(`${prefix}jump`, 'Salta al número de track que se indique')
             .addField(`${prefix}remove`, 'Elimina el número de track que se indique')
             .addField(`${prefix}join`, 'Agrega al bot al canal de audio(Tenés que estar en un canal de audio)')
             .addField(`${prefix}leave`, 'Expulsa al bot del canal de audio(Tenés que estar en un canal de audio)')
@@ -164,11 +172,21 @@ bot.on('message', async message => {
                     return
                 }
 
-                let results = await Search(args)
+                if (spdl.validateURL(args)) {
 
-                const song = new Song(results.items[0].url, results.items[0].title, results.items[0].bestThumbnail.url, results.items[0].duration)
-                server.addSong(song)
+                    let song
 
+                    const info = await spdl.getInfo(args)
+
+                    song = new Song(args, `${info.artists} - ${info.title}`, info.thumbnail, formatDuration(info.duration))
+                    song = server.addSong(song)
+                } else {
+
+                    let results = await Search(args)
+
+                    song = new Song(results.items[0].url, results.items[0].title, results.items[0].bestThumbnail.url, results.items[0].duration)
+                    song = server.addSong(song)
+                }
 
                 if (!message.guild.voice) {
                     const connection = await channel.join()
@@ -200,6 +218,11 @@ bot.on('message', async message => {
                 break;
 
             case `${prefix}search`:
+
+                if (!args) {
+                    message.channel.send('Especificá un criterio de búsqueda')
+                    return
+                }
 
                 searchList = await Search(args)
                 searchList = searchList.items.filter((song, i) => i < 5)
@@ -257,7 +280,7 @@ bot.on('message', async message => {
 
             case `${prefix}queue`:
 
-                if (server && !server.isEmpty()) {
+                if (server && server.queue.length > 1) {
                     server.queue.forEach((song, i) => {
                         if (i < 1) return
                         const embed = RichEmbed(song, i)
@@ -269,7 +292,26 @@ bot.on('message', async message => {
 
                 break;
 
+            case `${prefix}jump`:
+
+                if (!args) {
+                    message.channel.send('Especificá un número de track')
+                    return
+                }
+
+                server.queue = server.queue.filter((song, i) => !(i < args))
+
+                const connection = await channel.join()
+                Play(connection, message, server)
+
+                break;
+
             case `${prefix}remove`:
+
+                if (!args) {
+                    message.channel.send('Especificá un número de track')
+                    return
+                }
 
                 if (server && !server.isEmpty()) {
                     if (parseInt(args) >= 1) {

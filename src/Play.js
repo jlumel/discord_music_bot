@@ -1,26 +1,31 @@
 const ytdl = require('ytdl-core-discord')
+const spdl = require('spdl-core')
 const RichEmbed = require('./RichEmbed')
 
 const Play = async (connection, message, server) => {
 
-    
+    let dispatcher
 
-    if (server.getFirstSong()) {
-        
-        const url = server.getFirstSong().url
-        const dispatcher = connection.play(await ytdl(url), { filter: "audioonly", type: 'opus' })
-        const embed = RichEmbed(server.getFirstSong())
-        message.channel.send(embed)
+    if (server.getFirstSong() && !spdl.validateURL(server.getFirstSong().url)) {
 
-        dispatcher.on("finish", () => {
+        dispatcher = connection.play(await ytdl(server.getFirstSong().url), { filter: "audioonly", type: 'opus' })
 
-            server.queue.shift()
+    } else if (server.getFirstSong() && spdl.validateURL(server.getFirstSong().url)) {
 
-            if (server.queue.length) {
-                Play(connection, message, server)
-            }
-        })
+        dispatcher = connection.play(await spdl(server.getFirstSong().url))
     }
+
+    const embed = RichEmbed(server.getFirstSong())
+    message.channel.send(embed)
+
+    dispatcher.on("finish", () => {
+
+        server.queue.shift()
+        
+        if (!server.isEmpty()) {
+            Play(connection, message, server)
+        }
+    })
 }
 
 module.exports = Play
